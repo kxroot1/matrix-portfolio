@@ -1,0 +1,386 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   MATRIX TERMINAL — CRT THEME
+   ═══════════════════════════════════════════════════════════ */
+
+@theme {
+  --color-matrix-black: #0a0a0a;
+  --color-matrix-dark: #0d1117;
+  --color-matrix-green: #00ff41;
+  --color-matrix-green-dim: #00cc33;
+  --color-matrix-green-bright: #39ff14;
+  --color-matrix-green-glow: rgba(0, 255, 65, 0.15);
+  --color-matrix-amber: #ffb000;
+  --color-matrix-red: #ff3333;
+  --color-matrix-cyan: #00e5ff;
+  --color-matrix-white: #c0c0c0;
+  --color-matrix-comment: #4a6a4a;
+  --font-mono: "JetBrains Mono", "Fira Code", "Source Code Pro", "Cascadia Code", monospace;
+}
+
+/* ─── Base Reset ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-matrix-black);
+  font-family: var(--font-mono);
+  color: var(--color-matrix-green);
+  font-size: 14px;
+  line-height: 1.6;
+  cursor: default;
+}
+
+::selection {
+  background: var(--color-matrix-green);
+  color: var(--color-matrix-black);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-matrix-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.25);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 65, 0.45);
+}
+
+/* ─── CRT Scanline Overlay ───────────────────────────────── */
+#scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ─── CRT Flicker Effect ─────────────────────────────────── */
+#crt-flicker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9997;
+  animation: crt-flicker 0.08s infinite alternate;
+  opacity: 0;
+}
+
+@keyframes crt-flicker {
+  0% { opacity: 0.01; background: rgba(0, 255, 65, 0.01); }
+  25% { opacity: 0; }
+  50% { opacity: 0.015; background: rgba(0, 255, 65, 0.008); }
+  75% { opacity: 0; }
+  100% { opacity: 0.02; background: rgba(0, 255, 65, 0.012); }
+}
+
+/* ─── Matrix Canvas ──────────────────────────────────────── */
+#matrix-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease-in;
+}
+
+#matrix-canvas.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ─── App Container ──────────────────────────────────────── */
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-matrix-black);
+  position: relative;
+  overflow: hidden;
+}
+
+/* CRT curved vignette edges */
+#app::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+}
+
+/* ─── Terminal Container ─────────────────────────────────── */
+.terminal-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px;
+  padding-bottom: 80px;
+  scroll-behavior: smooth;
+}
+
+/* ─── Terminal Output Lines ──────────────────────────────── */
+.terminal-line {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  min-height: 1.6em;
+  animation: line-appear 0.1s ease-out;
+}
+
+@keyframes line-appear {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.terminal-line.typing {
+  border-right: 2px solid var(--color-matrix-green);
+  animation: line-appear 0.1s ease-out, blink-caret 0.6s step-end infinite;
+}
+
+@keyframes blink-caret {
+  50% { border-color: transparent; }
+}
+
+/* ─── Prompt ─────────────────────────────────────────────── */
+.prompt {
+  color: var(--color-matrix-green);
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+}
+
+.prompt-user {
+  color: var(--color-matrix-cyan);
+  font-weight: 600;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+}
+
+.prompt-path {
+  color: var(--color-matrix-amber);
+  text-shadow: 0 0 6px rgba(255, 176, 0, 0.4);
+}
+
+.prompt-symbol {
+  color: var(--color-matrix-green-bright);
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.6);
+}
+
+/* ─── Input Area ─────────────────────────────────────────── */
+.input-area {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  padding: 12px 24px 16px;
+  background: linear-gradient(to top, var(--color-matrix-black) 80%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.input-area input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-matrix-green);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  caret-color: var(--color-matrix-green-bright);
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+}
+
+.input-area input::placeholder {
+  color: rgba(0, 255, 65, 0.2);
+}
+
+/* ─── Text Colors & Styles ───────────────────────────────── */
+.text-green { color: var(--color-matrix-green); }
+.text-green-dim { color: var(--color-matrix-green-dim); }
+.text-green-bright { color: var(--color-matrix-green-bright); }
+.text-amber { color: var(--color-matrix-amber); }
+.text-red { color: var(--color-matrix-red); }
+.text-cyan { color: var(--color-matrix-cyan); }
+.text-white { color: var(--color-matrix-white); }
+.text-comment { color: var(--color-matrix-comment); }
+
+.glow {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.6), 0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6), 0 0 20px rgba(0, 229, 255, 0.3);
+}
+
+.glow-amber {
+  text-shadow: 0 0 10px rgba(255, 176, 0, 0.6), 0 0 20px rgba(255, 176, 0, 0.3);
+}
+
+/* ─── ASCII Art ──────────────────────────────────────────── */
+.ascii-art {
+  color: var(--color-matrix-green-bright);
+  text-shadow: 0 0 15px rgba(57, 255, 20, 0.5), 0 0 30px rgba(57, 255, 20, 0.2);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* ─── Table (for projects/skills) ────────────────────────── */
+.terminal-table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+  max-width: 700px;
+}
+
+.terminal-table th {
+  color: var(--color-matrix-cyan);
+  text-align: left;
+  padding: 4px 16px 4px 0;
+  border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+  font-weight: 600;
+}
+
+.terminal-table td {
+  padding: 4px 16px 4px 0;
+  color: var(--color-matrix-green);
+}
+
+.terminal-table tr:hover td {
+  background: rgba(0, 255, 65, 0.03);
+}
+
+/* ─── Progress Bar ───────────────────────────────────────── */
+.skill-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-bar-track {
+  width: 120px;
+  height: 8px;
+  background: rgba(0, 255, 65, 0.08);
+  border: 1px solid rgba(0, 255, 65, 0.15);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-matrix-green-dim), var(--color-matrix-green-bright));
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  transition: width 0.8s ease-out;
+}
+
+/* ─── Autocomplete Suggestion ────────────────────────────── */
+.autocomplete-hint {
+  color: rgba(0, 255, 65, 0.25);
+  pointer-events: none;
+  position: absolute;
+}
+
+/* ─── Link Styles ────────────────────────────────────────── */
+.terminal-link {
+  color: var(--color-matrix-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: text-shadow 0.2s ease;
+}
+
+.terminal-link:hover {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+}
+
+/* ─── Boot Sequence ──────────────────────────────────────── */
+.boot-line {
+  animation: boot-fade 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes boot-fade {
+  to { opacity: 1; }
+}
+
+/* ─── Section Headers ────────────────────────────────────── */
+.section-header {
+  color: var(--color-matrix-green-bright);
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba(57, 255, 20, 0.5);
+  border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+/* ─── Tab Completion Popup ───────────────────────────────── */
+.tab-popup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 4px 0;
+}
+
+.tab-popup span {
+  color: var(--color-matrix-green-dim);
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+  html, body {
+    font-size: 12px;
+  }
+
+  .terminal-container {
+    padding: 12px 14px;
+    padding-bottom: 70px;
+  }
+
+  .input-area {
+    padding: 10px 14px 12px;
+  }
+
+  .ascii-art {
+    font-size: 6px;
+  }
+
+  .skill-bar-track {
+    width: 80px;
+  }
+}
